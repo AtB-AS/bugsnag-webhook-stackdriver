@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	logger *logging.Client
+	logClient *logging.Client
 )
 
 // Response is the response structure returned by the webhook
@@ -47,7 +47,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 	}
-	logger = client
+	logClient = client
 
 }
 
@@ -75,11 +75,7 @@ func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Do something with Event here
-	evStr, err := json.Marshal(ev)
-	if err != nil {
-		log.Fatalf("failed to serialize event data: %v", err)
-	}
-	logToStackDriver(evStr)
+	logToStackDriver(ev)
 
 	r := Response{
 		Status:  "OK",
