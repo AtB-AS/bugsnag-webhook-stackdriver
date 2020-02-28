@@ -48,7 +48,6 @@ func init() {
 		log.Fatalf("failed to create client: %v", err)
 	}
 	logClient = client
-
 }
 
 // BugsnagWebhook is a HTTP webhook for receiving errors from bugsnag
@@ -63,8 +62,8 @@ func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ev := &bugsnag.Event{}
-	err = json.Unmarshal(body, ev)
+	ev := bugsnag.Event{}
+	err = json.Unmarshal(body, &ev)
 	if err != nil {
 		r := Response{
 			Status:  "failed to parse request body",
@@ -75,7 +74,7 @@ func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Do something with Event here
-	logToStackDriver(ev)
+	logToStackDriver(&ev)
 
 	r := Response{
 		Status:  "OK",
