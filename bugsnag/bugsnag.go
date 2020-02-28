@@ -4,12 +4,12 @@ import "time"
 
 // Event represents an event received from Bugsnag
 type Event struct {
-	Account *Account `json:"account"`
-	Project *Project `json:"project"`
-	Trigger *Trigger `json:"trigger"`
-	User    *User    `json:"user"`
-	Error   *Error   `json:"error"`
-	Release *Release `json:"release"`
+	Account Account `json:"account"`
+	Project Project `json:"project"`
+	Trigger Trigger `json:"trigger"`
+	User    User    `json:"user"`
+	Error   Error   `json:"error"`
+	Release Release `json:"release"`
 }
 
 type Account struct {
@@ -25,11 +25,11 @@ type Project struct {
 }
 
 type Trigger struct {
-	Type        string      `json:"type"`
-	Message     string      `json:"message"`
-	Rate        int         `json:"rate"`
-	StateChange string      `json:"stateChange"`
-	SnoozeRule  *SnoozeRule `json:"snoozeRule"`
+	Type        string     `json:"type"`
+	Message     string     `json:"message"`
+	Rate        int        `json:"rate"`
+	StateChange string     `json:"stateChange"`
+	SnoozeRule  SnoozeRule `json:"snoozeRule"`
 }
 
 type SnoozeRule struct {
@@ -44,24 +44,24 @@ type User struct {
 }
 
 type Error struct {
-	ID             string        `json:"id"`
-	ErrorID        string        `json:"errorId"`
-	ExceptionClass string        `json:"exceptionClass"`
-	Message        string        `json:"message"`
-	Context        string        `json:"context"`
-	FirstReceived  *time.Time    `json:"firstReceived"`
-	ReceivedAt     *time.Time    `json:"receivedAt"`
-	RequestURL     string        `json:"requestUrl"`
-	AssignedUserID string        `json:"assignedUserId"`
-	URL            string        `json:"url"`
-	Severity       string        `json:"severity"`
-	Status         string        `json:"status"`
-	Unhandled      bool          `json:"unhandled"`
-	CreatedIssue   *CreatedIssue `json:"createdIssue"`
-	User           *User         `json:"user"`
-	App            *App          `json:"app"`
-	Device         *Device       `json:"device"`
-	StackTrace     *[]Stacktrace `json:"stackTrace"`
+	ID             string       `json:"id"`
+	ErrorID        string       `json:"errorId"`
+	ExceptionClass string       `json:"exceptionClass"`
+	Message        string       `json:"message"`
+	Context        string       `json:"context"`
+	FirstReceived  *time.Time   `json:"firstReceived"`
+	ReceivedAt     *time.Time   `json:"receivedAt"`
+	RequestURL     string       `json:"requestUrl"`
+	AssignedUserID string       `json:"assignedUserId"`
+	URL            string       `json:"url"`
+	Severity       string       `json:"severity"`
+	Status         string       `json:"status"`
+	Unhandled      bool         `json:"unhandled"`
+	CreatedIssue   CreatedIssue `json:"createdIssue"`
+	User           User         `json:"user"`
+	App            App          `json:"app"`
+	Device         Device       `json:"device"`
+	StackTrace     []Stacktrace `json:"stackTrace"`
 }
 
 type CreatedIssue struct {
@@ -118,15 +118,15 @@ type Stacktrace struct {
 }
 
 type Release struct {
-	ID            string         `json:"id"`
-	Version       string         `json:"version"`
-	VersionCode   string         `json:"versionCode"`
-	BundleVersion string         `json:"bundleVersion"`
-	ReleaseStage  string         `json:"releaseStage"`
-	URL           string         `json:"url"`
-	ReleaseTime   *time.Time     `json:"releaseTime"`
-	ReleasedBy    string         `json:"releasedBy"`
-	SourceControl *SourceControl `json:"sourceControl"`
+	ID            string        `json:"id"`
+	Version       string        `json:"version"`
+	VersionCode   string        `json:"versionCode"`
+	BundleVersion string        `json:"bundleVersion"`
+	ReleaseStage  string        `json:"releaseStage"`
+	URL           string        `json:"url"`
+	ReleaseTime   *time.Time    `json:"releaseTime"`
+	ReleasedBy    string        `json:"releasedBy"`
+	SourceControl SourceControl `json:"sourceControl"`
 }
 
 type SourceControl struct {
