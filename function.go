@@ -1,6 +1,7 @@
 package function
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,38 +9,82 @@ import (
 	"net/http"
 	"os"
 
+	"cloud.google.com/go/logging"
+
 	"github.com/atb-as/bugsnag-webhook-stackdriver/bugsnag"
 )
 
 var (
-	projectID string
+	logger *logging.Client
 )
 
-func init() {
-	env, ok := os.LookupEnv("GCP_PROJECT")
-	projectID = env
+// Response is the response structure returned by the webhook
+type Response struct {
+	Status  string `json:"status"`
+	Success bool   `json:"success"`
+}
 
+func (r Response) String() string {
+	j, _ := json.Marshal(r)
+	return string(j)
+}
+
+func jsonResponse(w http.ResponseWriter, j string, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	fmt.Fprintf(w, j)
+}
+
+func init() {
+	projectID, ok := os.LookupEnv("GCP_PROJECT")
 	if !ok {
 		log.Fatal("GCP_PROJECT not found in environment")
 	}
+
+	ctx := context.Background()
+
+	client, err := logging.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("failed to create client: %v", err)
+	}
+	logger = client
+
 }
 
 // BugsnagWebhook is a HTTP webhook for receiving errors from bugsnag
-func BugsnagWebhook(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		r := Response{
+			Status:  "failed to read request body",
+			Success: false,
+		}
+		jsonResponse(w, r.String(), http.StatusInternalServerError)
 		return
 	}
 
-	trigger := &bugsnag.Trigger{}
-	err = json.Unmarshal(body, trigger)
+	ev := &bugsnag.Event{}
+	err = json.Unmarshal(body, ev)
 	if err != nil {
-		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		r := Response{
+			Status:  "failed to parse request body",
+			Success: false,
+		}
+		jsonResponse(w, r.String(), http.StatusBadRequest)
 		return
 	}
 
-	// Do something with trigger here
+	// Do something with Event here
+	evStr, err := json.Marshal(ev)
+	if err != nil {
+		log.Fatalf("failed to serialize event data: %v", err)
+	}
+	logToStackDriver(evStr)
 
-	fmt.Fprintf(w, "OK")
+	r := Response{
+		Status:  "OK",
+		Success: true,
+	}
+	jsonResponse(w, r.String(), http.StatusOK)
+
 }
