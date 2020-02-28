@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      [
+        'functions',
+        'deploy',
+        '--region=europe-west1',
+        'BugsnagWebhook',
+        '--trigger-http',
+        '--runtime',
+        'go111',
+        '--allow-unauthenticated',
+      ]
