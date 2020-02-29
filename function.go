@@ -76,6 +76,8 @@ func init() {
 // BugsnagWebhook is a HTTP webhook for receiving errors from bugsnag
 func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
 	dec := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
 	ev := bugsnag.Event{}
 
 	err := dec.Decode(&ev)
