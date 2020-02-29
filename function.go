@@ -9,14 +9,17 @@ import (
 	"os"
 
 	"cloud.google.com/go/logging"
+	"cloud.google.com/go/pubsub"
 
 	"github.com/atb-as/bugsnag-webhook-stackdriver/bugsnag"
 )
 
 var (
+	ctx       context.Context
 	projectID string
 	logName   string
 	logClient *logging.Client
+	topic     *pubsub.Topic
 )
 
 // Response is the response structure returned by the webhook
@@ -47,14 +50,27 @@ func init() {
 		log.Fatal("LOG_NAME not found in environment")
 	}
 
-	ctx := context.Background()
-
-	client, err := logging.NewClient(ctx, projectID)
-	if err != nil {
-		log.Fatalf("failed to create client: %v", err)
+	topicName := os.Getenv("PUBSUB_TOPIC")
+	if topicName == "" {
+		topicName = logName
 	}
 
+	ctx = context.Background()
+	client, err := logging.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("failed to create log client: %v", err)
+	}
 	logClient = client
+
+	pubSubClient, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		log.Fatalf("failed to create pubsub client: %v", err)
+	}
+
+	topic, err = pubSubClient.CreateTopic(ctx, topicName)
+	if err != nil {
+		topic = pubSubClient.Topic(topicName)
+	}
 }
 
 // BugsnagWebhook is a HTTP webhook for receiving errors from bugsnag
@@ -74,6 +90,7 @@ func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
 
 	// TODO: request validation?
 	logToStackDriver(&ev)
+	publish(&ev)
 
 	r := Response{
 		Success: true,
