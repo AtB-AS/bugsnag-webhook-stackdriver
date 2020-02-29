@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -15,12 +14,14 @@ import (
 )
 
 var (
+	projectID string
+	logName   string
 	logClient *logging.Client
 )
 
 // Response is the response structure returned by the webhook
 type Response struct {
-	Status  string `json:"status"`
+	Error   string `json:"error,omitempty"`
 	Success bool   `json:"success"`
 }
 
@@ -36,9 +37,14 @@ func jsonResponse(w http.ResponseWriter, j string, status int) {
 }
 
 func init() {
-	projectID, ok := os.LookupEnv("GCP_PROJECT")
-	if !ok {
+	projectID = os.Getenv("GCP_PROJECT")
+	if projectID == "" {
 		log.Fatal("GCP_PROJECT not found in environment")
+	}
+
+	logName = os.Getenv("LOG_NAME")
+	if logName == "" {
+		log.Fatal("LOG_NAME not found in environment")
 	}
 
 	ctx := context.Background()
@@ -47,39 +53,30 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 	}
+
 	logClient = client
 }
 
 // BugsnagWebhook is a HTTP webhook for receiving errors from bugsnag
 func BugsnagWebhook(w http.ResponseWriter, req *http.Request) {
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		r := Response{
-			Status:  "failed to read request body",
-			Success: false,
-		}
-		jsonResponse(w, r.String(), http.StatusInternalServerError)
-		return
-	}
-
+	dec := json.NewDecoder(req.Body)
 	ev := bugsnag.Event{}
-	err = json.Unmarshal(body, &ev)
+
+	err := dec.Decode(&ev)
 	if err != nil {
 		r := Response{
-			Status:  "failed to parse request body",
+			Error:   fmt.Errorf("decode: %w", err).Error(),
 			Success: false,
 		}
 		jsonResponse(w, r.String(), http.StatusBadRequest)
 		return
 	}
 
-	// Do something with Event here
+	// TODO: request validation?
 	logToStackDriver(&ev)
 
 	r := Response{
-		Status:  "OK",
 		Success: true,
 	}
 	jsonResponse(w, r.String(), http.StatusOK)
-
 }
