@@ -6,10 +6,7 @@ import (
 )
 
 func logToStackDriver(event *bugsnag.Event) {
-	logName := "bugsnag-errors"
-	logger := logClient.Logger(logName)
-
-	logger.Log(logging.Entry{
+	logClient.Logger(logName).Log(logging.Entry{
 		Severity: logging.Alert,
 		Labels: map[string]string{
 			"platform": event.Error.Device.OSName,

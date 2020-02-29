@@ -10,4 +10,5 @@ steps:
         '--runtime',
         'go111',
         '--allow-unauthenticated',
+        '--set-env-vars LOG_NAME=bugsnag-errors',
       ]
